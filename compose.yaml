@@ -1,0 +1,47 @@
+services:
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: localgpt-ollama
+    restart: unless-stopped
+
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+
+    volumes:
+      - ollama-data:/root/.ollama
+
+    ports:
+      - "127.0.0.1:11434:11434"
+
+    networks:
+      - localgpt-network
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: localgpt-webui
+    restart: unless-stopped
+
+    depends_on:
+      - ollama
+
+    ports:
+      - "3000:8080"
+
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+
+    volumes:
+      - openwebui-data:/app/backend/data
+
+    networks:
+      - localgpt-network
+
+volumes:
+  ollama-data:
+  openwebui-data:
+
+networks:
+  localgpt-network:
+    driver: bridge
